@@ -2,7 +2,6 @@
 
 #include <aidl/com/example/BnMyService.h>
 
-using aidl::com::example::ComplexType;
 using ndk::ScopedAStatus;
 
 namespace aidl {
@@ -12,14 +11,12 @@ namespace example {
 class MyService : public BnMyService
 {
 public:
-    ScopedAStatus basicTypes(int32_t in_anInt, int64_t in_aLong, bool in_aBoolean,
-            float in_aFloat, double in_aDouble, const std::string& in_aString) override;
-
-    ScopedAStatus complexType(const ComplexType& in_aComplexObject, std::string* _aidl_return) override;
-
-    ScopedAStatus returnComplexType(int32_t in_anInt, int64_t in_aLong, bool in_aBoolean,
-            float in_aFloat, double in_aDouble, const std::string& in_aString,
-            ComplexType* _aidl_return) override;
+    ScopedAStatus sayHello(int32_t in_hi, std::string *_aidl_return) override;
+    ScopedAStatus createSwapchain(int32_t in_imageCount) override;
+    ScopedAStatus waitFrame(int64_t *_aidl_return) override;
+    ScopedAStatus acquireImage(int32_t *_aidl_return) override;
+    ScopedAStatus releaseImage(int32_t imageIndex) override;
+    ScopedAStatus endFrame() override;
 };
 
 } // namespace example

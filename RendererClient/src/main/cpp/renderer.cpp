@@ -1,14 +1,21 @@
 #include "renderer.h"
 #include "ShaderUtil.h"
 
+using aidl::com::example::IMyService;
+
 ClientRenderer ClientRenderer::s_Renderer{};
 
 ClientRenderer* ClientRenderer::GetInstance() {
     return &s_Renderer;
 }
 
-void ClientRenderer::Init() {
+void ClientRenderer::Init(IMyService *ipcService) {
+    if(!ipcService){
+        return;
+    }
     if(InitEGLEnv() != 0) return;
+    m_IpcService = ipcService;
+    CreateFramebuffers();
     CreateProgram();
 }
 
@@ -174,6 +181,26 @@ void ClientRenderer::DestroyEGLEnv() {
     m_EglDisplay = EGL_NO_DISPLAY;
     m_EglSurface = EGL_NO_SURFACE;
     m_EglContext = EGL_NO_CONTEXT;
+}
+
+void ClientRenderer::CreateFramebuffers() {
+    AHardwareBuffer *buffer = nullptr;
+    AHardwareBuffer_Desc desc = {
+            static_cast<uint32_t>(600),
+            static_cast<uint32_t>(600),
+            1,
+            AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM,
+            AHARDWAREBUFFER_USAGE_CPU_READ_NEVER | AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER |
+            AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT,
+            0,
+            0,
+            0};
+    int errCode = AHardwareBuffer_allocate(&desc, &buffer);
+    if(errCode != 0){
+        LOGE("allocate hw buffer fail.");
+        return;
+    }
+    m_IpcService->createSwapchain(IMAGE_COUNT);
 }
 
 void ClientRenderer::CreateProgram() {

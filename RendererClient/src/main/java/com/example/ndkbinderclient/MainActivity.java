@@ -3,27 +3,15 @@ package com.example.ndkbinderclient;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.opengl.GLES20;
-import android.opengl.GLException;
 import android.os.Bundle;
 import android.os.ConditionVariable;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ImageView;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.Constants;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 
 public class MainActivity extends AppCompatActivity implements ServiceConnection
 {
@@ -50,8 +38,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         mTV = findViewById(R.id.sample_text);
         mBgRender = new NativeEglRender();
         mBgRender.native_SetNativeAssetManager(getAssets());
-        mBgRender.native_OnInit();
-        startBgRender();
     }
 
     @Override
@@ -81,6 +67,9 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
                 String returnedString = mBgRender.talkToService();
 
+                mBgRender.native_OnInit();
+                startBgRender();
+
                 runOnUiThread(new SetTextRunnable("Talked to IMyService. Returned : " + returnedString));
             }
         }).start();
@@ -88,13 +77,14 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     @Override
     protected void onDestroy() {
-        mBgRender.native_OnDestroy();
         super.onDestroy();
     }
 
     @Override
     protected void onPause()
     {
+        mBgRender.native_OnDestroy();
+
         unbindService(this);
 
         mIsServiceConnected = false;
