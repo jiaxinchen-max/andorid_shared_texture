@@ -1,0 +1,2 @@
+include ':RendererService', ':RendererClient', ':Common'
+rootProject.name = "andorid_shared_texture"
