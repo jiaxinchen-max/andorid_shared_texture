@@ -76,11 +76,6 @@ void SetupClient(){
         exit(EXIT_FAILURE);
     }
 
-    // =========
-    rtCode = AHardwareBuffer_sendHandleToUnixSocket(hwBuffer, dataSocket);
-    if(rtCode != 0 || !hwBuffer){
-        LOG_E("can not sendHandleToUnixSocket.");
-    }
 }
 
 /**

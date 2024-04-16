@@ -87,10 +87,6 @@ void* SetupServer(void* obj){
         exit(EXIT_FAILURE);
     }
 
-    AHardwareBuffer_Desc desc;
-    AHardwareBuffer_describe(hwBuffer, &desc);
-    LOG_D("hwbuffer: %d x %d, format: %d", desc.width, desc.height, desc.format);
-
     LOG_D("Close socket");
 
     close(dataSocket);
