@@ -1,37 +1,27 @@
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.4.1)
 
-project("ndkbinderclient")
+set(APP_GLUE_DIR ${ANDROID_NDK}/sources/android/native_app_glue)
+include_directories(${APP_GLUE_DIR})
+add_library( app-glue STATIC ${APP_GLUE_DIR}/android_native_app_glue.c)
 
-add_library (
-        native-lib
+include_directories(inc)
+add_library(ClientIPC
         SHARED
-        native-lib.cpp
-        renderer.cpp
-        ${aidl_src_dir}/com/example/IMyService.cpp
+        Main.cpp
+        renderer/ClientRenderer.cpp
 )
 
-target_include_directories (
-        native-lib
-        PRIVATE
-        ${common_inc_dir}
-        includes
-)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
-find_library (
-        log-lib
-        log
-)
+add_subdirectory(glm)
+target_include_directories(ClientIPC PUBLIC glm)
 
-find_library (
-        binder_ndk-lib
-        binder_ndk
-)
-
-target_link_libraries (
-        native-lib
-        ${log-lib}
-        EGL
-        GLESv3
-        android
-        ${binder_ndk-lib}
+target_link_libraries(ClientIPC
+                        app-glue
+                        log
+                        EGL
+                        GLESv3
+                        android
+                        glm
 )

@@ -9,21 +9,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light">
 
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity android:name="android.app.NativeActivity"
+                android:configChanges="orientation|keyboardHidden"
+                android:screenOrientation="fullSensor">
+            <meta-data android:name="android.app.lib_name" android:value="ServerIPC" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service
-                android:name="com.example.ndkbinderservice.MyService"
-                android:enabled="true"
-                android:exported="true">
-            <intent-filter>
-                <action android:name="com.example.ndkbinderclient" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </service>
     </application>
 </manifest>
