@@ -4,7 +4,7 @@
 #include <android/log.h>
 #include <sys/time.h>
 
-#define  LOG_TAG "IPC-Server"
+#define  LOG_TAG "RendererServer"
 
 #define  LOG_E(...)  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define  LOG_V(...)  __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)

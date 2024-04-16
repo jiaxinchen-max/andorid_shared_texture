@@ -7,7 +7,7 @@ android {
     buildToolsVersion '29.0.3'
 
     defaultConfig {
-        applicationId "com.example.ndkbinderclient"
+        applicationId "com.example.RendererClient"
         minSdkVersion 29
         targetSdkVersion 30
         versionCode 1

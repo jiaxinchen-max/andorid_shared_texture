@@ -12,7 +12,6 @@
 
 bool isRunning = false;
 AHardwareBuffer *hWbuffer = nullptr;
-bool bFirstFrame = true;
 
 #define SOCKET_NAME "sharedServerSocket"
 
@@ -34,15 +33,12 @@ void* setupServer(void* na) {
     }
     LOG_I("Socket made");
 
-    // NDK needs abstract namespace by leading with '\0'
-    // Ya I was like WTF! too... http://www.toptip.ca/2013/01/unix-domain-socket-with-abstract-socket.html?m=1
-    // Note you don't need to unlink() the socket then
     memcpy(&socket_name[0], "\0", 1);
     strcpy(&socket_name[1], SOCKET_NAME);
 
     // clear for safty
     memset(&server_addr, 0, sizeof(struct sockaddr_un));
-    server_addr.sun_family = AF_UNIX; // Unix Domain instead of AF_INET IP domain
+    server_addr.sun_family = AF_UNIX;
     strncpy(server_addr.sun_path, socket_name, sizeof(server_addr.sun_path) - 1); // 108 char max
 
     ret = bind(socket_fd, (const struct sockaddr *) &server_addr, sizeof(struct sockaddr_un));
@@ -67,9 +63,6 @@ void* setupServer(void* na) {
         exit(EXIT_FAILURE);
     }
     LOG_I("Accepted data");
-    // This is the main loop for handling connections
-    // Assuming in example connection is established only once
-    // Would be better to refactor this for robustness
     int count = 0;
     for (;;) {
         LOG_D("data_socket:");
