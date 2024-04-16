@@ -18,7 +18,7 @@ allprojects {
 task clean(type: Delete) {
     doLast {
         rootProject.buildDir.deleteDir()
-        project(':RendererService').buildDir.deleteDir()
+        project(':RendererServer').buildDir.deleteDir()
         project(':RendererClient').buildDir.deleteDir()
     }
 }
