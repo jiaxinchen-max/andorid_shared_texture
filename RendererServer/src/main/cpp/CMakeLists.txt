@@ -8,7 +8,6 @@ include_directories(inc)
 add_library(ServerIPC
         SHARED
         Main.cpp
-        renderer/ServerRenderer.cpp
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")

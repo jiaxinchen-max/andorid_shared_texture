@@ -8,90 +8,78 @@
 #include <unistd.h>
 
 #include "LogUtil.h"
-#include "renderer/ClientRenderer.h"
 
 bool isRunning = false;
+AHardwareBuffer *hwBuffer = nullptr;
 
-// Can be anything if using abstract namespace
-#define SOCKET_NAME "sharedServerSocket"
-static int data_socket;
+#define SOCKET_NAME     "shard_texture_socket"
 
-bool SetupClient() {
-    char socket_name[108]; // 108 sun_path length max
-    static struct sockaddr_un server_addr;
-
-    data_socket = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (data_socket < 0) {
-        LOG_E("socket: %s", strerror(errno));
-        return false;
-    }
-
-    memcpy(&socket_name[0], "\0", 1);
-    strcpy(&socket_name[1], SOCKET_NAME);
-
-    // clear for safty
-    memset(&server_addr, 0, sizeof(struct sockaddr_un));
-    server_addr.sun_family = AF_UNIX; // Unix Domain instead of AF_INET IP domain
-    strncpy(server_addr.sun_path, socket_name, sizeof(server_addr.sun_path) - 1); // 108 char max
-
-    // Assuming only one init connection for demo
-    int ret = connect(data_socket, (const struct sockaddr *) &server_addr, sizeof(struct sockaddr_un));
-    if (ret < 0) {
-        LOG_E("connect: %s", strerror(errno));
-        return false;
-    }
-    LOG_I("Client Setup Complete");
-    return true;
-}
-
-void cmd_handler(struct android_app *app, int32_t cmd) {
-    switch ( cmd ) {
+void cmd_handler(struct android_app *app, int32_t cmd){
+    switch (cmd) {
         case APP_CMD_START: {
-            LOG_D("onStart()");
             LOG_D("    APP_CMD_START");
             break;
         }
-        case APP_CMD_RESUME: {
-            LOG_D("onResume()");
-            LOG_D("    APP_CMD_RESUME");
-            break;
-        }
-        case APP_CMD_GAINED_FOCUS: {
-            LOG_D("onGainedFocus()");
-            LOG_D("    APP_CMD_GAINED_FOCUS");
-            break;
-        }
-        case APP_CMD_PAUSE: {
-            LOG_D("onPause()");
-            LOG_D("    APP_CMD_PAUSE");
-            break;
-        }
-        case APP_CMD_STOP: {
-            LOG_D("onStop()");
-            LOG_D("    APP_CMD_STOP");
-            break;
-        }
         case APP_CMD_DESTROY: {
-            LOG_D("onDestroy()");
             LOG_D("    APP_CMD_DESTROY");
             break;
         }
-        case APP_CMD_INIT_WINDOW: {
-            LOG_D("surfaceCreated()");
+        case APP_CMD_INIT_WINDOW: {                         // ANativeWindow init
             LOG_D("    APP_CMD_INIT_WINDOW");
-            ServerRenderer::GetInstance()->m_GlobalApp = app;
-            ServerRenderer::GetInstance()->m_NativeAssetManager = app->activity->assetManager;
-            ServerRenderer::GetInstance()->Init(data_socket);
-            isRunning = true;
             break;
         }
-        case APP_CMD_TERM_WINDOW: {
-            LOG_D("surfaceDestroyed()");
+        case APP_CMD_TERM_WINDOW: {                         // ANativeWindow term
             LOG_D("    APP_CMD_TERM_WINDOW");
-//            isRunning = false;
-//            ServerRenderer::GetInstance()->Destroy();
             break;
         }
+    }
+}
+
+void SetupClient(){
+    char socketName[108];
+    struct sockaddr_un serverAddr;
+    int dataSocket;
+
+    dataSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+    if(dataSocket < 0){
+        LOG_E("socket: %s", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    memcpy(&socketName[0], "\0", 1);
+    strcpy(&socketName[1], SOCKET_NAME);
+
+    memset(&serverAddr, 0, sizeof(struct sockaddr_un));
+    serverAddr.sun_family = AF_UNIX;
+    strncpy(serverAddr.sun_path, socketName, sizeof(serverAddr.sun_path) - 1);
+
+    // connect
+    int ret = connect(dataSocket, reinterpret_cast<const sockaddr *>(&serverAddr), sizeof(struct sockaddr_un));
+    if(ret < 0){
+        LOG_E("connect: %s", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    LOG_I("Client Setup complete.");
+
+    // create a hwbuffer
+    AHardwareBuffer_Desc hwDesc;
+    hwDesc.format = AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM;
+    hwDesc.width = 1024;
+    hwDesc.height = 1024;
+    hwDesc.layers = 1;
+    hwDesc.usage = AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN | AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER
+            | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT | AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
+    int rtCode = AHardwareBuffer_allocate(&hwDesc, &hwBuffer);
+    if(rtCode != 0 || !hwBuffer){
+        LOG_E("can not create hardwarebuffer.");
+        exit(EXIT_FAILURE);
+    }
+
+    // =========
+    rtCode = AHardwareBuffer_sendHandleToUnixSocket(hwBuffer, dataSocket);
+    if(rtCode != 0 || !hwBuffer){
+        LOG_E("can not sendHandleToUnixSocket.");
     }
 }
 
@@ -120,9 +108,6 @@ void android_main(struct android_app *app) {
                 LOG_D("Terminating event loop...");
                 return;
             }
-        }
-        if(isRunning){
-            ServerRenderer::GetInstance()->Draw();
         }
     }
 }
