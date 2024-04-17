@@ -8,37 +8,18 @@
 #include <unistd.h>
 
 #include "LogUtil.h"
+#include "renderer/ClientRenderer.h"
+
+#define SOCKET_NAME "shared_texture_socket"
 
 bool isRunning = false;
+int dataSocket = -1;
 AHardwareBuffer *hwBuffer = nullptr;
-
-#define SOCKET_NAME     "shard_texture_socket"
-
-void cmd_handler(struct android_app *app, int32_t cmd){
-    switch (cmd) {
-        case APP_CMD_START: {
-            LOG_D("    APP_CMD_START");
-            break;
-        }
-        case APP_CMD_DESTROY: {
-            LOG_D("    APP_CMD_DESTROY");
-            break;
-        }
-        case APP_CMD_INIT_WINDOW: {                         // ANativeWindow init
-            LOG_D("    APP_CMD_INIT_WINDOW");
-            break;
-        }
-        case APP_CMD_TERM_WINDOW: {                         // ANativeWindow term
-            LOG_D("    APP_CMD_TERM_WINDOW");
-            break;
-        }
-    }
-}
+ClientRenderer *clientRenderer = nullptr;
 
 void SetupClient(){
     char socketName[108];
     struct sockaddr_un serverAddr;
-    int dataSocket;
 
     dataSocket = socket(AF_UNIX, SOCK_STREAM, 0);
     if(dataSocket < 0){
@@ -61,21 +42,51 @@ void SetupClient(){
     }
 
     LOG_I("Client Setup complete.");
+}
 
-    // create a hwbuffer
-    AHardwareBuffer_Desc hwDesc;
-    hwDesc.format = AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM;
-    hwDesc.width = 1024;
-    hwDesc.height = 1024;
-    hwDesc.layers = 1;
-    hwDesc.usage = AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN | AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER
-            | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT | AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
-    int rtCode = AHardwareBuffer_allocate(&hwDesc, &hwBuffer);
-    if(rtCode != 0 || !hwBuffer){
-        LOG_E("can not create hardwarebuffer.");
-        exit(EXIT_FAILURE);
+void cmd_handler(struct android_app *app, int32_t cmd){
+    switch (cmd) {
+        case APP_CMD_INIT_WINDOW: {                         // ANativeWindow init
+            LOG_D("    APP_CMD_INIT_WINDOW");
+            if(dataSocket < 0){
+                SetupClient();
+                AHardwareBuffer_Desc hwDesc;
+                hwDesc.format = AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM;
+                hwDesc.width = 1024;
+                hwDesc.height = 1024;
+                hwDesc.layers = 1;
+                hwDesc.rfu0 = 0;
+                hwDesc.rfu1 = 0;
+                hwDesc.stride = 0;
+                hwDesc.usage = AHARDWAREBUFFER_USAGE_CPU_READ_NEVER | AHARDWAREBUFFER_USAGE_CPU_WRITE_NEVER
+                               | AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT | AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE;
+                int rtCode = AHardwareBuffer_allocate(&hwDesc, &hwBuffer);
+                if(rtCode != 0 || !hwBuffer){
+                    LOG_E("Failed to allocate hardware buffer.");
+                    exit(EXIT_FAILURE);
+                }
+                isRunning = true;
+            }
+
+            clientRenderer = ClientRenderer::GetInstance();
+            clientRenderer->m_GlobalApp = app;
+            clientRenderer->m_NativeAssetManager = app->activity->assetManager;
+            clientRenderer->Init(hwBuffer, dataSocket);
+
+            break;
+        }
+
+        case APP_CMD_TERM_WINDOW:{
+
+            break;
+        }
+
+        case APP_CMD_DESTROY:{
+            isRunning = false;
+            clientRenderer->Destroy();
+            break;
+        }
     }
-
 }
 
 /**
@@ -87,15 +98,13 @@ void android_main(struct android_app *app) {
     LOG_D( "----------------------------------------------------------------" );
     LOG_D( "    android_main()" );
 
-    app->onAppCmd = cmd_handler;
-
     int32_t result;
     android_poll_source* source;
 
-    SetupClient();
+    app->onAppCmd = cmd_handler;
 
     for (;;) {
-        while((result = ALooper_pollAll(isRunning ? 0 : -1, nullptr, nullptr, reinterpret_cast<void**>(&source))) >= 0){
+        while((result = ALooper_pollAll(0, nullptr, nullptr, reinterpret_cast<void**>(&source))) >= 0){
             if(source != nullptr)
                 source->process(app, source);
 
@@ -103,6 +112,10 @@ void android_main(struct android_app *app) {
                 LOG_D("Terminating event loop...");
                 return;
             }
+        }
+
+        if(isRunning && clientRenderer){
+            clientRenderer->Draw();
         }
     }
 }

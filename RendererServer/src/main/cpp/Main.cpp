@@ -8,38 +8,20 @@
 #include <sys/un.h>
 
 #include "LogUtil.h"
+#include "renderer/ServerRenderer.h"
 
-bool isRunning = false;
+int socketFd = -1;
+int dataSocket = -1;
+
 AHardwareBuffer *hwBuffer = nullptr;
+ServerRenderer *serverRenderer = nullptr;
+bool isRunning = false;
 
-#define SOCKET_NAME     "shard_texture_socket"
-
-void cmd_handler(struct android_app *app, int32_t cmd){
-    switch (cmd) {
-        case APP_CMD_START: {
-            LOG_D("    APP_CMD_START");
-            break;
-        }
-        case APP_CMD_DESTROY: {
-            LOG_D("    APP_CMD_DESTROY");
-            break;
-        }
-        case APP_CMD_INIT_WINDOW: {                         // ANativeWindow init
-            LOG_D("    APP_CMD_INIT_WINDOW");
-            break;
-        }
-        case APP_CMD_TERM_WINDOW: {                         // ANativeWindow term
-            LOG_D("    APP_CMD_TERM_WINDOW");
-            break;
-        }
-    }
-}
+#define SOCKET_NAME "shared_texture_socket"
 
 void* SetupServer(void* obj){
     int ret;
     struct sockaddr_un serverAddr;
-    int socketFd;
-    int dataSocket;
     char socketName[108];
 
     LOG_I("Start server setup");
@@ -74,24 +56,59 @@ void* SetupServer(void* obj){
 
     LOG_I("Setup Server complete.");
 
-    // accept
-    dataSocket = accept(socketFd, nullptr, nullptr);
-    if(dataSocket < 0){
-        LOG_E("accept: %s", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
+    while (1){
+        // accept
+        dataSocket = accept(socketFd, nullptr, nullptr);
+        LOG_I("accept dataSocket: %d", dataSocket);
+        if(dataSocket < 0){
+            LOG_E("accept: %s", strerror(errno));
+            break;
+        }
 
-    ret = AHardwareBuffer_recvHandleFromUnixSocket(dataSocket, &hwBuffer);
-    if(ret != 0){
-        LOG_E("recvHandleFromUnixSocket: %d", ret);
-        exit(EXIT_FAILURE);
+        while (1){
+            ret = AHardwareBuffer_recvHandleFromUnixSocket(dataSocket, &hwBuffer);
+            if(ret != 0){
+                LOG_E("recvHandleFromUnixSocket: %d", ret);
+                break;
+            }
+            AHardwareBuffer_Desc desc;
+            AHardwareBuffer_describe(hwBuffer, &desc);
+            LOG_D("recvHandleFromUnixSocket: %d x %d, layer: %d, format: %d", desc.width, desc.height, desc.layers, desc.format);
+        }
     }
-
-    LOG_D("Close socket");
+    LOG_D("Close dataSocket");
 
     close(dataSocket);
-    close(socketFd);
     return nullptr;
+}
+
+void cmd_handler(struct android_app *app, int32_t cmd){
+    switch (cmd) {
+        case APP_CMD_INIT_WINDOW: {                         // ANativeWindow init
+            LOG_D("    APP_CMD_INIT_WINDOW");
+            if(socketFd < 0){
+                pthread_t serverThread;
+                pthread_create(&serverThread, nullptr, SetupServer, nullptr);
+            }
+
+            if(hwBuffer){
+                serverRenderer = ServerRenderer::GetInstance();
+                serverRenderer->m_GlobalApp = app;
+                serverRenderer->m_NativeAssetManager = app->activity->assetManager;
+                serverRenderer->Init(hwBuffer);
+                isRunning = true;
+            }
+            break;
+        }
+        case APP_CMD_TERM_WINDOW:{
+            break;
+        }
+        case APP_CMD_DESTROY:{
+            isRunning = false;
+            serverRenderer->Destroy();
+            break;
+        }
+    }
 }
 
 /**
@@ -103,13 +120,10 @@ void android_main(struct android_app *app) {
     LOG_D( "----------------------------------------------------------------" );
     LOG_D( "    android_main()" );
 
-    app->onAppCmd = cmd_handler;
-
     int32_t result;
     android_poll_source* source;
 
-    pthread_t serverThread;
-    pthread_create(&serverThread, nullptr, SetupServer, nullptr);
+    app->onAppCmd = cmd_handler;
 
     for (;;) {
         while((result = ALooper_pollAll(0, nullptr, nullptr, reinterpret_cast<void**>(&source))) >= 0){
@@ -120,6 +134,10 @@ void android_main(struct android_app *app) {
                 LOG_D("Terminating event loop...");
                 return;
             }
+        }
+
+        if(isRunning && serverRenderer){
+            serverRenderer->Draw();
         }
     }
 }
