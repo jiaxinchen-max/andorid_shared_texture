@@ -1,15 +1,16 @@
 plugins {
-    id 'com.android.application'
+    id 'com.android.library'
 }
 
 android {
-    compileSdkVersion 30
-    buildToolsVersion '29.0.3'
+    namespace "com.example.render.client"
+    compileSdk 34
+    ndkVersion '25.1.8937393'
 
     defaultConfig {
-        applicationId "com.example.RendererClient"
-        minSdkVersion 29
-        targetSdkVersion 30
+//        applicationId "com.example.RendererClient"
+        targetSdk 34
+        minSdk 26
         versionCode 1
         versionName "1.0"
 
@@ -30,7 +31,7 @@ android {
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
-            version "3.10.2"
+            version "3.22.1"
         }
     }
 
@@ -42,4 +43,7 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.activity:activity:1.8.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
 }

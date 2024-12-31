@@ -7,12 +7,13 @@ add_library( app-glue STATIC ${APP_GLUE_DIR}/android_native_app_glue.c)
 include_directories(inc)
 add_library(ServerIPC
         SHARED
-        Main.cpp
+#        Main.cpp
         renderer/ServerRenderer.cpp
+        renderer/render.cpp
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
+#set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
 
 target_link_libraries(ServerIPC
         app-glue

@@ -11,6 +11,7 @@
 #include <GLES2/gl2ext.h>
 #include <GLES2/gl2platform.h>
 #include <android/hardware_buffer.h>
+#include <jni.h>
 
 class ServerRenderer{
 public:
@@ -19,6 +20,7 @@ public:
     void Init(AHardwareBuffer *hwBuffer);
     void Destroy();
     void Draw();
+    void RenderSetWindow(JNIEnv* env ,jobject new_surface, AHardwareBuffer* new_buffer);
 
     AAssetManager *m_NativeAssetManager;
     struct android_app *m_GlobalApp;

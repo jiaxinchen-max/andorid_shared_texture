@@ -1,2 +1,3 @@
 include ':RendererServer', ':RendererClient'
 rootProject.name = "andorid_shared_texture"
+include ':App'

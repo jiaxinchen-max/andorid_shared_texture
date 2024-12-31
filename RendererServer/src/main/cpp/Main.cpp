@@ -102,9 +102,9 @@ void cmd_handler(struct android_app *app, int32_t cmd){
         case APP_CMD_TERM_WINDOW: {                         // ANativeWindow term
             LOG_D("    APP_CMD_TERM_WINDOW");
             isRunning = false;
-            if(serverRenderer){
-                serverRenderer->Destroy();
-            }
+//            if(serverRenderer){
+//                serverRenderer->Destroy();
+//            }
             break;
         }
         case APP_CMD_DESTROY: {
