@@ -1,6 +1,7 @@
 package com.example.render;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -27,30 +28,39 @@ public class RenderSurface extends SurfaceView {
     public RenderSurface(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
-    private SurfaceHolder.Callback callback ;
 
-    public native void initEGLEnv(Surface surface, String name);
+    private SurfaceHolder.Callback callback;
 
+    public native boolean startServer(String[] args);
+
+    public native void windowChanged(Surface surface, String name);
+    public native void startClient();
+    public native void setNativeAssetManager(AssetManager assetManager);
 }
-class Render implements SurfaceHolder.Callback{
+
+class Render implements SurfaceHolder.Callback {
     private SurfaceHolder sh;
-    private SurfaceView sv;
-    public Render(RenderSurface sv,SurfaceHolder sh){
+    private RenderSurface sv;
+
+    public Render(RenderSurface sv, SurfaceHolder sh) {
         super();
         this.sv = sv;
-        this.sh=sh;
+        this.sh = sh;
     }
+
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         // 启动线程
-        MyThread t = new MyThread(sh, sv);
-        new Thread(t).start();
+//        MyThread t = new MyThread(sh, sv);
+//        new Thread(t).start();
+//        this.sv.windowChanged(holder.getSurface(),"screen");
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
                                int height) {
-
+        this.sv.windowChanged(holder.getSurface(),"screen");
+        this.sv.startClient();
     }
 
     @Override
@@ -58,6 +68,7 @@ class Render implements SurfaceHolder.Callback{
 
     }
 }
+
 class MyThread implements Runnable {
     private SurfaceHolder sh;
     private SurfaceView sv;

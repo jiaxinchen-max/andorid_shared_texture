@@ -195,7 +195,13 @@ int ClientRenderer::InitEGLEnv() {
             break;
         }
 
-        m_EglSurface = eglCreateWindowSurface(m_EglDisplay, m_EglConfig, m_GlobalApp->window, nullptr);
+//        m_EglSurface = eglCreateWindowSurface(m_EglDisplay, m_EglConfig, m_GlobalApp->window, nullptr);
+        const EGLint pbufferAttributes[] = {
+                EGL_WIDTH, 1024,
+                EGL_HEIGHT, 748,
+                EGL_NONE,
+        };
+        m_EglSurface = eglCreatePbufferSurface(m_EglDisplay, m_EglConfig, pbufferAttributes);
         if(m_EglSurface == EGL_NO_SURFACE) {
             switch(eglGetError()) {
                 case EGL_BAD_ALLOC:
