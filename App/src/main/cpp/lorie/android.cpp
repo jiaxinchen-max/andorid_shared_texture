@@ -8,18 +8,18 @@ extern "C" void initClient(){
 }
 extern "C" {
 #include "server.h"
-JNIEXPORT jboolean JNICALL
+}
+extern "C" JNIEXPORT jboolean JNICALL
 Java_com_example_render_RenderSurface_startServer(JNIEnv *env, jclass clazz, jobjectArray args) {
     return start(env, clazz, args);
 }
 
-JNIEXPORT void JNICALL
+extern "C" JNIEXPORT void JNICALL
 Java_com_example_render_RenderSurface_windowChanged(JNIEnv *env, jobject thiz, jobject surface,
                                                     jstring jname) {
     lorieChangeWindow(NULL, surface ? env->NewGlobalRef( surface) : NULL);
 }
-JNIEXPORT void JNICALL
+extern "C" JNIEXPORT void JNICALL
 Java_com_example_render_RenderSurface_startClient(JNIEnv *env, jobject thiz) {
     initClient();
-}
 }
