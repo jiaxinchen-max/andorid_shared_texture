@@ -13,7 +13,7 @@ Java_com_example_render_RenderSurface_setNativeAssetManager(JNIEnv *env, jobject
                                                             jobject asset_manager) {
      nativeasset = AAssetManager_fromJava(env, asset_manager);
 }
-
+AHardwareBuffer * GetAHardwareBuffer(){return hwBuffer;}
 void Setup() {
     char socketName[108];
     struct sockaddr_un serverAddr;
@@ -98,6 +98,7 @@ void Start() {
     for (;;) {
         if (isRunning && clientRenderer) {
             clientRenderer->Draw();
+            LOG_D("    Draw()");
         }
         usleep(100);
     }

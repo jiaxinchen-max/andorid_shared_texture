@@ -1,4 +1,3 @@
-#include <android/hardware_buffer.h>
 #include <jni.h>
 #include "renderer.h"
 #include "lorie.h"
@@ -25,6 +24,8 @@ static lorieScreenInfo lorieScreen = { .root.width = 1280, .root.height = 1024, 
 static lorieScreenInfoPtr pvfb = &lorieScreen;
 static char *xstartup = NULL;
 
+static jobject currentSurface=NULL;
+
 static Bool TrueNoop() { return TRUE; }
 static Bool FalseNoop() { return FALSE; }
 static void VoidNoop() {}
@@ -40,6 +41,7 @@ void lorieSetVM(JavaVM* vm) {
 }
 Bool lorieChangeWindow(__unused void* pClient, void *closure) {
     jobject surface = (jobject) closure;
+    currentSurface = surface;
     renderer_set_window(pvfb->env, surface, pvfb->root.buffer);
 //    lorieSetCursor(NULL, NULL, CursorForDevice(GetMaster(lorieMouse, MASTER_POINTER)), -1, -1);
 
@@ -49,4 +51,7 @@ Bool lorieChangeWindow(__unused void* pClient, void *closure) {
 //    }
 
     return TRUE;
+}
+Bool lorieChangeBuffer(AHardwareBuffer* buffer){
+    renderer_set_window(pvfb->env, currentSurface, buffer);
 }

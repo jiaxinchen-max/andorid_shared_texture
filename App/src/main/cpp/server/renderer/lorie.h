@@ -1,5 +1,5 @@
 #pragma once
-
+#include <android/hardware_buffer.h>
 #include <jni.h>
 
 #ifndef TRUE
@@ -14,3 +14,4 @@
 void initOutput();
 void lorieSetVM(JavaVM *vm);
 Bool lorieChangeWindow(__unused void* pClient, void *closure);
+Bool lorieChangeBuffer(AHardwareBuffer* buffer);

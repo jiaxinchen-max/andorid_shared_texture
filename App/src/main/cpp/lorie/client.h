@@ -21,7 +21,7 @@
 #define APP_CMD_DESTROY 3
 #endif
 
-
+AHardwareBuffer * GetAHardwareBuffer();
 void Setup();
 
 void Handler(int32_t cmd);
