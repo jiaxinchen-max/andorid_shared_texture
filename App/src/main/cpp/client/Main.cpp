@@ -41,7 +41,7 @@ void SetupClient(){
         exit(EXIT_FAILURE);
     }
 
-    LOG_I("Client Setup complete.");
+    LOG_I("Client ClientSetup complete.");
 }
 
 void cmd_handler(struct android_app *app, int32_t cmd){

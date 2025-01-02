@@ -35,7 +35,8 @@ public class RenderSurface extends SurfaceView {
 
     public native void windowChanged(Surface surface, String name);
     public native void startClient();
-    public native void setNativeAssetManager(AssetManager assetManager);
+    public native void setClientNativeAssetManager(AssetManager assetManager);
+    public native void setServerNativeAssetManager(AssetManager assetManager);
 }
 
 class Render implements SurfaceHolder.Callback {

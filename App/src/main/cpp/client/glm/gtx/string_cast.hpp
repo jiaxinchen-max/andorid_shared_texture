@@ -10,7 +10,7 @@
 ///
 /// Include <glm/gtx/string_cast.hpp> to use the features of this extension.
 ///
-/// Setup strings for GLM type values
+/// ClientSetup strings for GLM type values
 ///
 /// This extension is not supported with CUDA
 

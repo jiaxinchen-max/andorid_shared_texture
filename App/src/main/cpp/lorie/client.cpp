@@ -9,12 +9,11 @@ static AAssetManager *nativeasset= nullptr;
 #define SOCKET_NAME     "shard_texture_socket"
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_example_render_RenderSurface_setNativeAssetManager(JNIEnv *env, jobject thiz,
-                                                            jobject asset_manager) {
+Java_com_example_render_RenderSurface_setClientNativeAssetManager(JNIEnv *env, jobject thiz,
+                                                                  jobject asset_manager) {
      nativeasset = AAssetManager_fromJava(env, asset_manager);
 }
-AHardwareBuffer * GetAHardwareBuffer(){return hwBuffer;}
-void Setup() {
+void ClientSetup() {
     char socketName[108];
     struct sockaddr_un serverAddr;
 
@@ -39,15 +38,15 @@ void Setup() {
         exit(EXIT_FAILURE);
     }
 
-    LOG_I("Client Setup complete.");
+    LOG_I("Client ClientSetup complete.");
 }
 
-void Handler(int32_t cmd) {
+void ClientHandler(int32_t cmd) {
     switch (cmd) {
         case APP_CMD_INIT_WINDOW: {                         // ANativeWindow init
             LOG_D("    APP_CMD_INIT_WINDOW");
             if (dataSocket < 0) {
-                Setup();
+                ClientSetup();
                 AHardwareBuffer_Desc hwDesc;
                 hwDesc.format = AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM;
                 hwDesc.width = 1024;
@@ -92,9 +91,9 @@ void Handler(int32_t cmd) {
     }
 }
 
-void Start() {
+void ClientStart() {
     LOG_D("----------------------------------------------------------------");
-    LOG_D("    Start()");
+    LOG_D("    ClientStart()");
     for (;;) {
         if (isRunning && clientRenderer) {
             clientRenderer->Draw();

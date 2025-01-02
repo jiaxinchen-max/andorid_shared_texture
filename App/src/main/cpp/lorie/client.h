@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "LogUtil.h"
-#include "renderer/ClientRenderer.h"
+#include "ClientRenderer.h"
 
 #ifndef APP_CMD_INIT_WINDOW
 #define APP_CMD_INIT_WINDOW 1
@@ -21,9 +21,8 @@
 #define APP_CMD_DESTROY 3
 #endif
 
-AHardwareBuffer * GetAHardwareBuffer();
-void Setup();
+void ClientSetup();
 
-void Handler(int32_t cmd);
+void ClientHandler(int32_t cmd);
 
-void Start();
+void ClientStart();

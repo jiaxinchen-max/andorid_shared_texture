@@ -19,7 +19,8 @@ public class MainActivity extends AppCompatActivity {
         sv=findViewById(R.id.render_surface);
         sh = sv.getHolder();
         sh.addCallback(new Render(sv,sh));
-        sv.setNativeAssetManager(getAssets());
+        sv.setClientNativeAssetManager(getAssets());
+        sv.setServerNativeAssetManager(getAssets());
         sv.startServer(new String[]{":1"});
     }
 }
